@@ -16,10 +16,11 @@ pub struct Config {
 #[derive(Debug, InitSpace)]
 pub struct Collateral {
     pub depositor: Pubkey,
-    pub collateral_amount: u64,
-    pub debt_amount: u64,
-    pub token_account: Pubkey,
     pub sol_account: Pubkey,
+    pub token_account: Pubkey,
+    pub collateral_amount: u64,
+    pub minted_amount: u64,
     pub bump: u8,
     pub bump_sol_account: u8,
+    pub is_initialized: bool,
 }

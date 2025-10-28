@@ -6,9 +6,11 @@ use anchor_spl::{
 use pyth_solana_receiver_sdk::price_update::PriceUpdateV2;
 
 use crate::{
-    constants::{SEED_COLLATERAL_ACCOUNT, SEED_SOL_ACCOUNT},
-    state::{Collateral, Config},
-    SEED_CONFIG_ACCOUNT,
+    instructions::{
+        check_health_factor,
+        deposit::utils::{deposit_sol_internal, mint_tokens_internal},
+    },
+    Collateral, Config, SEED_COLLATERAL_ACCOUNT, SEED_CONFIG_ACCOUNT, SEED_SOL_ACCOUNT,
 };
 
 #[derive(Accounts)]
@@ -47,7 +49,7 @@ pub struct DepositAndMint<'info> {
     )]
     pub token_account: InterfaceAccount<'info, TokenAccount>,
 
-    pub price_account: Account<'info, PriceUpdateV2>,
+    pub price_update: Account<'info, PriceUpdateV2>,
     pub token_program: Program<'info, Token2022>,
     pub system_program: Program<'info, System>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -58,7 +60,39 @@ pub fn process_deposit_and_mint(
     amount_collateral: u64,
     amount_to_mint: u64,
 ) -> Result<()> {
-    msg!("Initialized Config Account: {:#?}", ctx.accounts.config);
+    let collateral = &mut ctx.accounts.collateral;
+    collateral.collateral_amount = ctx.accounts.sol_account.lamports() + amount_collateral;
+    collateral.minted_amount += amount_to_mint;
+
+    if !collateral.is_initialized {
+        collateral.is_initialized = true;
+        collateral.depositor = ctx.accounts.depositor.key();
+        collateral.sol_account = ctx.accounts.sol_account.key();
+        collateral.token_account = ctx.accounts.token_account.key();
+        collateral.bump = ctx.bumps.collateral;
+        collateral.bump_sol_account = ctx.bumps.sol_account;
+    }
+
+    check_health_factor(
+        &ctx.accounts.collateral,
+        &ctx.accounts.config,
+        &ctx.accounts.price_update,
+    )?;
+
+    deposit_sol_internal(
+        &ctx.accounts.depositor,
+        &ctx.accounts.sol_account,
+        &ctx.accounts.system_program,
+        amount_collateral,
+    )?;
+
+    mint_tokens_internal(
+        &ctx.accounts.mint,
+        &ctx.accounts.token_account,
+        &ctx.accounts.token_program,
+        ctx.accounts.config.bump_mint,
+        amount_to_mint,
+    )?;
 
     Ok(())
 }

@@ -8,6 +8,8 @@ mod state;
 use instructions::*;
 
 use constants::*;
+use state::*;
+use error::*;
 
 declare_id!("FtbNX5hZ3eypVkWoiRozgJH2bZap9yKcFomC9nFTB2xB");
 
