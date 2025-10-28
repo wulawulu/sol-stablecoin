@@ -26,7 +26,7 @@ pub fn mint_tokens_internal<'info>(
                 to: to.to_account_info(),
                 authority: mint.to_account_info(),
             },
-            signer_seeds
+            signer_seeds,
         ),
         amount,
     )
