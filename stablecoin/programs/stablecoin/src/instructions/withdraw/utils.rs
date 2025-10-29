@@ -11,7 +11,7 @@ use crate::constants::SEED_SOL_ACCOUNT;
 
 pub fn withdraw_sol_internal<'info>(
     from: &SystemAccount<'info>,
-    to: &SystemAccount<'info>,
+    to: &AccountInfo<'info>,
     system_program: &Program<'info, System>,
     depositor_key: &Pubkey,
     bump: u8,

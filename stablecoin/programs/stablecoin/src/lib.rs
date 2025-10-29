@@ -32,4 +32,12 @@ pub mod stablecoin {
     ) -> Result<()> {
         process_deposit_and_mint(ctx, amount_collateral, amount_to_mint)
     }
+
+    pub fn redeem_collateral_and_burn_tokens(
+        ctx: Context<RedeemCollateralAndBurnTokens>,
+        withdraw_sol_amount: u64,
+        burn_tokens_amount: u64,
+    ) -> Result<()> {
+        process_redeem_collateral_and_burn_tokens(ctx, withdraw_sol_amount, burn_tokens_amount)
+    }
 }
