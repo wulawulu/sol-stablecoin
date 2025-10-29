@@ -6,4 +6,6 @@ pub enum ErrorCode {
     BelowMinimumHealthFactor,
     #[msg("Invalid price from price feed.")]
     InvalidPrice,
+    #[msg("Above minimum health factor.")]
+    AboveMinimumHealthFactor,
 }

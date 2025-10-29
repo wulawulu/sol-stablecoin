@@ -8,7 +8,6 @@ mod state;
 use instructions::*;
 
 use constants::*;
-use error::*;
 use state::*;
 
 declare_id!("FtbNX5hZ3eypVkWoiRozgJH2bZap9yKcFomC9nFTB2xB");
@@ -39,5 +38,9 @@ pub mod stablecoin {
         burn_tokens_amount: u64,
     ) -> Result<()> {
         process_redeem_collateral_and_burn_tokens(ctx, withdraw_sol_amount, burn_tokens_amount)
+    }
+
+    pub fn liquidate(ctx: Context<Liquidate>, amount_to_burn: u64) -> Result<()> {
+        process_liquidate(ctx, amount_to_burn)
     }
 }
