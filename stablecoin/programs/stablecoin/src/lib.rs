@@ -10,7 +10,7 @@ use instructions::*;
 use constants::*;
 use state::*;
 
-declare_id!("FtbNX5hZ3eypVkWoiRozgJH2bZap9yKcFomC9nFTB2xB");
+declare_id!("5Pz3WQMY5KyMJ6ioMd19kVAVahNSyVFfE44AeeTmtJTm");
 
 #[program]
 pub mod stablecoin {
