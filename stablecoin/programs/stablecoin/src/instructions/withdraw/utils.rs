@@ -10,8 +10,8 @@ use anchor_spl::{
 use crate::constants::SEED_SOL_ACCOUNT;
 
 pub fn withdraw_sol_internal<'info>(
-    from: &SystemAccount<'info>,
-    to: &AccountInfo<'info>,
+    from: AccountInfo<'info>,
+    to: AccountInfo<'info>,
     system_program: &Program<'info, System>,
     depositor_key: &Pubkey,
     bump: u8,
@@ -22,8 +22,8 @@ pub fn withdraw_sol_internal<'info>(
         CpiContext::new_with_signer(
             system_program.to_account_info(),
             Transfer {
-                from: from.to_account_info(),
-                to: to.to_account_info(),
+                from,
+                to,
             },
             seeds,
         ),

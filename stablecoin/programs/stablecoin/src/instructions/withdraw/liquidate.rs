@@ -1,4 +1,4 @@
-use anchor_lang::prelude::*;
+use anchor_lang::{prelude::*, system_program};
 use anchor_spl::{
     token_2022::Token2022,
     token_interface::{Mint, TokenAccount},
@@ -32,8 +32,9 @@ pub struct Liquidate<'info> {
         has_one= sol_account,
     )]
     pub collateral: Account<'info, Collateral>,
-    #[account(mut)]
-    pub sol_account: SystemAccount<'info>,
+    #[account(mut, owner = system_program::ID)]
+    /// CHECK: System-owned PDA vault created during deposit; authority is proven via seeds.
+    pub sol_account: UncheckedAccount<'info>,
 
     #[account(mut)]
     pub mint: InterfaceAccount<'info, Mint>,
@@ -65,9 +66,11 @@ pub fn process_liquidate(ctx: Context<Liquidate>, amount_to_burn: u64) -> Result
     let liquidation_bonus = lamports * ctx.accounts.config.liquidation_bonus / 100;
     let amount_to_liquidate = lamports + liquidation_bonus;
 
+    let sol_account_info = ctx.accounts.sol_account.to_account_info();
+
     withdraw_sol_internal(
-        &ctx.accounts.sol_account,
-        &ctx.accounts.liquidator.to_account_info(),
+        sol_account_info.clone(),
+        ctx.accounts.liquidator.to_account_info(),
         &ctx.accounts.system_program,
         &ctx.accounts.collateral.depositor,
         ctx.accounts.collateral.bump_sol_account,
@@ -83,7 +86,7 @@ pub fn process_liquidate(ctx: Context<Liquidate>, amount_to_burn: u64) -> Result
     )?;
 
     let collateral = &mut ctx.accounts.collateral;
-    collateral.collateral_amount = ctx.accounts.sol_account.lamports();
+    collateral.collateral_amount = sol_account_info.lamports();
     collateral.minted_amount -= amount_to_burn;
 
     Ok(())

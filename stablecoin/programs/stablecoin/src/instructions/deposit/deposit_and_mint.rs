@@ -1,4 +1,4 @@
-use anchor_lang::prelude::*;
+use anchor_lang::{prelude::*, system_program};
 use anchor_spl::{
     associated_token::AssociatedToken,
     token_interface::{Mint, Token2022, TokenAccount},
@@ -33,11 +33,15 @@ pub struct DepositAndMint<'info> {
     )]
     pub collateral: Account<'info, Collateral>,
     #[account(
-        mut,
+        init_if_needed,
+        payer = depositor,
         seeds = [SEED_SOL_ACCOUNT, depositor.key().as_ref()],
         bump,
+        space = 0,
+        owner = system_program::ID,
     )]
-    pub sol_account: SystemAccount<'info>,
+    /// CHECK: System-owned PDA vault for storing deposited SOL; initialized and funded within the instruction.
+    pub sol_account: UncheckedAccount<'info>,
     #[account(mut)]
     pub mint: InterfaceAccount<'info, Mint>,
     #[account(
@@ -60,8 +64,10 @@ pub fn process_deposit_and_mint(
     amount_collateral: u64,
     amount_to_mint: u64,
 ) -> Result<()> {
+    let sol_account_info = ctx.accounts.sol_account.to_account_info();
+
     let collateral = &mut ctx.accounts.collateral;
-    collateral.collateral_amount = ctx.accounts.sol_account.lamports() + amount_collateral;
+    collateral.collateral_amount = sol_account_info.lamports() + amount_collateral;
     collateral.minted_amount += amount_to_mint;
 
     if !collateral.is_initialized {
@@ -81,7 +87,7 @@ pub fn process_deposit_and_mint(
 
     deposit_sol_internal(
         &ctx.accounts.depositor,
-        &ctx.accounts.sol_account,
+        sol_account_info.clone(),
         &ctx.accounts.system_program,
         amount_collateral,
     )?;

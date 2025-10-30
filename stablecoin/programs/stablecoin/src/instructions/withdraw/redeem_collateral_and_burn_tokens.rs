@@ -1,4 +1,4 @@
-use anchor_lang::prelude::*;
+use anchor_lang::{prelude::*, system_program};
 use anchor_spl::{
     token_2022::Token2022,
     token_interface::{Mint, TokenAccount},
@@ -34,8 +34,9 @@ pub struct RedeemCollateralAndBurnTokens<'info> {
         has_one=token_account,
     )]
     pub collateral: Account<'info, Collateral>,
-    #[account(mut)]
-    pub sol_account: SystemAccount<'info>,
+    #[account(mut, owner = system_program::ID)]
+    /// CHECK: System-owned PDA vault created during deposit; access is restricted through seeds.
+    pub sol_account: UncheckedAccount<'info>,
 
     #[account(mut)]
     pub mint: InterfaceAccount<'info, Mint>,
@@ -52,8 +53,10 @@ pub fn process_redeem_collateral_and_burn_tokens(
     withdraw_sol_amount: u64,
     burn_tokens_amount: u64,
 ) -> Result<()> {
+    let sol_account_info = ctx.accounts.sol_account.to_account_info();
+
     let collateral = &mut ctx.accounts.collateral;
-    collateral.collateral_amount = ctx.accounts.sol_account.lamports() - withdraw_sol_amount;
+    collateral.collateral_amount = sol_account_info.lamports() - withdraw_sol_amount;
     collateral.minted_amount -= burn_tokens_amount;
 
     check_health_factor(
@@ -71,8 +74,8 @@ pub fn process_redeem_collateral_and_burn_tokens(
     )?;
 
     withdraw_sol_internal(
-        &ctx.accounts.sol_account,
-        &ctx.accounts.depositor.to_account_info(),
+        sol_account_info,
+        ctx.accounts.depositor.to_account_info(),
         &ctx.accounts.system_program,
         &ctx.accounts.depositor.key(),
         ctx.accounts.collateral.bump_sol_account,

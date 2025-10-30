@@ -5,14 +5,14 @@ package_manager = "yarn"
 resolution = true
 skip-lint = false
 
-[programs.devnet]
+[programs.localnet]
 stablecoin = "5Pz3WQMY5KyMJ6ioMd19kVAVahNSyVFfE44AeeTmtJTm"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
